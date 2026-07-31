@@ -7,10 +7,12 @@ PARA CUANDO EL PROYECTO YA ESTA AVANSADO (NPM INSTALL)
 
 GTI:
 Crear rama: git branch nombre_rama
-Crear rama y pasarse as ella: git checkout  -b nombre_rama
+Crear rama y pasarse a ella: git checkout  -b nombre_rama
 
 Ver configuracion de git: git config --global --list
 git config --list
 
 Borrar configuracion: git config --global --list
 git config --global --unset user.email
+
+git config remote.origin.url 

@@ -1,0 +1,68 @@
+[
+  {
+    "id": 1,
+    "nombre": "Lincoln",
+    "correo": "lincoln@gmail.com",
+    "imagen": "/Misimagenes/atardecer.avif",
+    "clave": "12345"
+  },
+  {
+    "id": 1,
+    "nombre": "Lincoln",
+    "correo": "lincoln@gmail.com",
+    "imagen": "/Misimagenes/atardecer.avif",
+    "clave": "12345"
+  },
+  {
+    "id": 1,
+    "nombre": "Pedro",
+    "correo": "pedro@gmail.com",
+    "imagen": "/Misimagenes/atardecer.avif",
+    "clave": "123456"
+  },
+  {
+    "id": 1,
+    "nombre": "Pedro",
+    "correo": "pedro@gmail.com",
+    "imagen": "sin imagen",
+    "clave": "123456"
+  },
+  {
+    "id": 1,
+    "nombre": "Pedro",
+    "correo": "pedro@gmail.com",
+    "imagen": "sin imagen",
+    "clave": "123456"
+  },
+  {
+    "id": "5",
+    "nombre": "pablo",
+    "correo": "pablo@gmail.com",
+    "clave": "3000",
+    "imagen": "/misImagenes/1788550835458.png"
+  },
+  {
+    "id": "5",
+    "nombre": "pablo",
+    "correo": "pablo@gmail.com",
+    "clave": "3000",
+    "imagen": "/misImagenes/1788550868487.png"
+  },
+  {
+    "id": "8",
+    "nombre": "paul",
+    "correo": "paul@gmail.com",
+    "clave": "1234567",
+    "imagen": "/misImagenes/1788551021644.png"
+  },
+  {
+    "id": "8",
+    "nombre": "paul",
+    "correo": "paul@gmail.com",
+    "clave": "1234567",
+    "imagen": "/misImagenes/1788551186046.png"
+  },
+  {
+    "imagen": "sin imagen"
+  }
+]

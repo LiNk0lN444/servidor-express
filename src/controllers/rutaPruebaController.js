@@ -1,5 +1,5 @@
-const mostrarRuta= (req, res)=>{
+const mostrarUsuarios= async (req, res)=>{
     res.json ({mensaje: "Esta rutaPrueba y personal con controller."})
 }
 
-module.exports = mostrarRuta 
+module.exports = mostrarUsuarios

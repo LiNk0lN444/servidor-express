@@ -1,157 +1,189 @@
-import express from "express";
-import { configDotenv } from "dotenv";
-
-configDotenv();
-
+const express = require('express');
 const app = express();
-const port = process.env.PUERTO || 3000;
 
-app.get("/", (_, res) => {
-    res.send("Aprendices ficha 3407186 SENA");
+
+require('dotenv').config();
+
+const port = process.env.PORT || 3030;
+const jwt= require("jsonwebtoken")
+
+const registroMiddleware = require("./src/middleware/registroMiddleware");
+const manejadorErrores = require("./src/middleware/manejadorErrores");
+const autenticacion =require("./src/middleware/autenticacion")
+
+// Middlewares para parsear el body
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Middleware para mostrar tiempo y fecha
+app.use((req, res, next) => {
+  console.log(`Tiempo milisegundos: ${Date.now()}`);
+  console.log(`Fecha: ${new Date().toISOString()}`);
+  next();
 });
 
-// Endpoint 1
-app.get("/ruta1", (req, res) => {
-    res.send("<h1>Usando res.send</h1>");
+app.use(registroMiddleware);
+
+// Módulos para manejo de archivos
+const sistemaArchivo = require('fs');
+const ruta = require('path');
+
+const rutaArchivo = ruta.join(__dirname, 'datos.json');
+
+const multer = require('multer');
+const { json } = require('stream/consumers');
+
+// Configuración de almacenamiento de imágenes
+const almacenamiento = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'misImagenes/');
+  },
+
+  filename: (req, file, cb) => {
+    const extension = ruta.extname(file.originalname);
+    cb(null, `${Date.now()}${extension}`);
+  }
 });
 
-// Endpoint 2
-app.get("/ruta2", (req, res) => {
-    res.json({
-        dev: "node --watch app.js",
-        script: "node app.js"
-    });
+const cargar = multer({ storage: almacenamiento });
+
+// Ruta principal
+app.get("/", (req, res) => {
+  res.send('API REST APRENDICES');
 });
 
-// Endpoint 3
-app.get("/ruta3/:nombre/:apellido", (req, res) => {
-    const nameUsuario = req.params.nombre;
-    const nameApellido = req.params.apellido;
+// Endpoint para listar aprendices
+app.get("/api/aprendices", (req, res) => {
+  sistemaArchivo.readFile(rutaArchivo, 'utf-8', (error, datos) => {
 
-    res.json({
-        usuario: nameUsuario,
-        apellido: nameApellido
-    });
-});
-
-// Endpoint 4
-app.get("/ruta4", (req, res) => {
-    const numero = req.query.phone || 3163601029;
-    const orden = req.query.orden || "sin orden"
-    const pagina = req.query.pagina || 1
-    res.send(`
-        <h1>Listado de Aprendices</h1>
-        <h2>El listado en orden: ${orden} </h2>
-        <p>pagina: ${pagina}</p>
-        <h3>Número: ${numero}</h3>
-    `);
-});
-
-app.get("/ruta5/:nombre", (req, res) => {
-    const { nombre } = req.params;
-
-    if (nombre.length < 3) {
-        return res.status(400).send("Error: el nombre debe tener al menos 3 letras");
+    if (error) {
+      return res.status(500).json({
+        mensaje: "Error al leer el archivo"
+      });
     }
 
-    res.send(`Hola, ${nombre}, bienvenido`);
-});
+    const listaAprendices = JSON.parse(datos);
 
-app.get("/ruta6/:nombre", (req, res) => {
-    const { nombre } = req.params;
-
-    res.json({
-        id: 1,
-        nombre,
-        stock: 20,
-        precio: 45000,
-        categoria: "Tecnología"
+    res.status(200).json({
+      mensaje: listaAprendices
     });
+  });
 });
 
-app.get("/ruta7/:categoria/:id", (req, res) => {
-    const { categoria, id } = req.params;
+// Endpoint para listar un aprendiz por ID
+app.get("/api/aprendices/:id", (req, res) => {
 
-    res.json({
-        servidor: "Express",
-        categoria,
-        producto: id
-    });
+  res.status(200).json({
+    mensaje: "Lista de un aprendiz",
+    id: req.params.id
+  });
+
 });
 
-app.get("/ruta8/:id/posts", (req, res) => {
-    const { id } = req.params;
-    const orden = req.query.orden || "asc";
+// Endpoint para crear un aprendiz con imagen
+app.post("/api/aprendices", cargar.single('imagen'), (req, res) => {
 
-    let publicaciones = [
-        "Publicación 1",
-        "Publicación 2",
-        "Publicación 3"
-    ];
+  const nuevoAprendiz = req.body;
 
-    if (orden === "desc") {
-        publicaciones.reverse();
+  // Agregar la ruta de la imagen
+  nuevoAprendiz.imagen = req.file
+    ? `/misImagenes/${req.file.filename}`
+    : "sin imagen";
+
+  // Leer archivo y agregar un nuevo aprendiz
+  sistemaArchivo.readFile(rutaArchivo, 'utf-8', (error, datos) => {
+
+    if (error) {
+      return res.status(500).json({
+        mensaje: "Error al leer el archivo"
+      });
     }
 
-    res.json({
-        usuario: id,
-        orden,
-        publicaciones
-    });
+    const listaAprendices = JSON.parse(datos);
+
+    // Agregar el nuevo aprendiz al arreglo
+    listaAprendices.push(nuevoAprendiz);
+
+    // Guardar nuevamente el archivo
+    sistemaArchivo.writeFile(
+      rutaArchivo,
+      JSON.stringify(listaAprendices, null, 2),
+      (error) => {
+
+        if (error) {
+          return res.status(500).json({
+            mensaje: "No se puede escribir en el archivo o BD"
+          });
+        }
+
+        res.status(201).json({
+          mensaje: "Aprendiz creado",
+          "datos aprendiz": nuevoAprendiz
+        });
+      }
+    );
+  });
 });
 
-app.get("/ruta9/:id/:posts_id/comentarios", (req, res) => {
-    const { id, posts_id } = req.params;
-    const orden = req.query.orden || "asc";
+// Endpoint para actualizar un aprendiz
+app.put("/api/aprendices/:id", (req, res) => {
 
-    let comentarios = [
-        "Comentario 1",
-        "Comentario 2",
-        "Comentario 3"
-    ];
+  res.status(200).json({
+    mensaje: "Actualizar aprendiz",
+    id: req.params.id
+  });
 
-    if (orden === "desc") {
-        comentarios.reverse();
-    }
-
-    res.json({
-        usuario: id,
-        post: posts_id,
-        orden,
-        comentarios
-    });
 });
 
-const libros = [
-    {
-        isbn: "111",
-        titulo: "Clean Code",
-        autor: "Robert C. Martin"
-    },
-    {
-        isbn: "222",
-        titulo: "JavaScript",
-        autor: "Douglas Crockford"
-    },
-    {
-        isbn: "333",
-        titulo: "Node.js",
-        autor: "Ryan Dahl"
-    }
-];
+// Endpoint para eliminar aprendiz
+app.delete("/api/aprendices/:id", (req, res) => {
 
-app.get("/ruta10/:isbn", (req, res) => {
-    const { isbn } = req.params;
+  res.status(200).json({
+    mensaje: "Eliminar aprendiz",
+    id: req.params.id
+  });
 
-    const libro = libros.find(libro => libro.isbn === isbn);
+}); // <-- ESTE CIERRE FALTABA
 
-    if (!libro) {
-        return res.status(404).send("Libro no encontrado");
-    }
+// Ruta para probar el manejador de errores
+app.get("/error", (req, res, next) => {
 
-    res.json(libro);
+  next(new Error("Error intencional de mi app"));
+
 });
 
+app.get("/api/rutaprotegida",autenticacion,(req,res)=>{
+    res.status(200).json({mensaje:"Esta es mi ruta protegida |||"})
+})
+app.post("/api/login", (req, res) => {
+
+    const usuarioBd = {
+        usuario: "Lincoln",
+        clave: "cas123"
+    };
+
+    const { usuario, clave } = req.body;
+
+    if (usuario !== usuarioBd.usuario || clave !== usuarioBd.clave) {
+        return res.status(400).json({
+            mensaje: "Credenciales no validas"
+        });
+    }
+
+    const token = jwt.sign(
+        { usuario },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+    );
+
+    res.json({ token });
+});
+
+// Middleware para manejar errores
+app.use(manejadorErrores);
+
+
+// Iniciar servidor
 app.listen(port, () => {
-    console.log(`SERVIDOR: http://localhost:${port}`);
+  console.log(`SERVIDOR: http://localhost:${port}`);
 });
